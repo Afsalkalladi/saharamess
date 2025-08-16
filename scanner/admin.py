@@ -13,7 +13,6 @@ import hashlib
 from core.models import StaffToken, ScanEvent
 
 
-@admin.register(StaffToken)
 class StaffTokenAdminConfig(admin.ModelAdmin):
     """Enhanced admin interface for StaffToken management."""
     

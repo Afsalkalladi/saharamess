@@ -388,5 +388,12 @@ def sync_send_qr_code(student_data: Dict[str, Any], qr_image) -> bool:
     return loop.run_until_complete(service.send_qr_code(student_data, qr_image))
 
 
-# Global instance
-telegram_service = TelegramNotificationService()
+# Global instance - initialize only if not in test mode
+try:
+    from django.conf import settings
+    if getattr(settings, 'TELEGRAM_BOT_TOKEN', '') != 'test-token':
+        telegram_service = TelegramNotificationService()
+    else:
+        telegram_service = None
+except Exception:
+    telegram_service = None

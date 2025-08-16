@@ -6,15 +6,44 @@ from celery.schedules import crontab
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mess_management.settings')
 
-# Create the Celery app
 app = Celery('mess_management')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-# Load task modules from all registered Django app configs.
+# Load task modules from all registered Django apps.
 app.autodiscover_tasks()
+
+# Celery Beat Schedule
+app.conf.beat_schedule = {
+    'retry-dlq-operations': {
+        'task': 'core.tasks.retry_dlq_operations',
+        'schedule': crontab(minute='*/5'),  # Every 5 minutes
+    },
+    'cleanup-old-audit-logs': {
+        'task': 'core.tasks.cleanup_old_audit_logs',
+        'schedule': crontab(hour=2, minute=0),  # Daily at 2 AM
+    },
+    'cleanup-old-scan-events': {
+        'task': 'core.tasks.cleanup_old_scan_events',
+        'schedule': crontab(hour=2, minute=30),  # Daily at 2:30 AM
+    },
+    'send-daily-summary': {
+        'task': 'core.tasks.send_daily_summary_report',
+        'schedule': crontab(hour=8, minute=0),  # Daily at 8 AM
+    },
+    'check-expired-payments': {
+        'task': 'core.tasks.check_expired_payments',
+        'schedule': crontab(hour=9, minute=0),  # Daily at 9 AM
+    },
+    'backup-critical-data': {
+        'task': 'core.tasks.backup_critical_data',
+        'schedule': crontab(hour=1, minute=0),  # Daily at 1 AM
+    },
+}
+
+app.conf.timezone = 'Asia/Kolkata'
 
 # Celery configuration
 app.conf.update(

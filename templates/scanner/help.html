@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Help - Mess Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+        }
+        
+        .section p, .section li {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        
+        .section ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .meal-times {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .meal-time {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .meal-time:last-child {
+            border-bottom: none;
+        }
+        
+        .meal-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .meal-hours {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .status-codes {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .status-code {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .status-code:last-child {
+            border-bottom: none;
+        }
+        
+        .status-icon {
+            font-size: 20px;
+            margin-right: 15px;
+            width: 30px;
+        }
+        
+        .status-text {
+            flex: 1;
+        }
+        
+        .status-title {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .status-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .troubleshooting {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .troubleshooting h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshooting p {
+            color: #856404;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .meal-time {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .meal-hours {
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Scanner Help & Instructions</h1>
+            <p>Complete guide for using the Mess QR Scanner</p>
+        </div>
+        
+        <div class="section">
+            <h2>🚀 Getting Started</h2>
+            <h3>For Staff Members:</h3>
+            <ul>
+                <li>Get a scanner access link from your admin</li>
+                <li>Open the link on your mobile device</li>
+                <li>Allow camera permissions when prompted</li>
+                <li>Select the appropriate meal type</li>
+                <li>Start scanning student QR codes</li>
+            </ul>
+            
+            <h3>For Admins:</h3>
+            <ul>
+                <li>Visit the <a href="{% url 'staff_access_generator' %}">Access Generator</a></li>
+                <li>Enter admin password</li>
+                <li>Generate scanner tokens for staff</li>
+                <li>Share the generated URLs with staff members</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>🍽️ Meal Times</h2>
+            <div class="meal-times">
+                <div class="meal-time">
+                    <div class="meal-name">🍳 Breakfast</div>
+                    <div class="meal-hours">7:00 AM - 9:30 AM</div>
+                </div>
+                <div class="meal-time">
+                    <div class="meal-name">🍽️ Lunch</div>
+                    <div class="meal-hours">12:00 PM - 2:30 PM</div>
+                </div>
+                <div class="meal-time">
+                    <div class="meal-name">🍽️ Dinner</div>
+                    <div class="meal-hours">7:00 PM - 9:30 PM</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Scan Results</h2>
+            <div class="status-codes">
+                <div class="status-code">
+                    <div class="status-icon">✅</div>
+                    <div class="status-text">
+                        <div class="status-title">Access Granted</div>
+                        <div class="status-desc">Student can access the meal. Payment is valid and no mess cut applied.</div>
+                    </div>
+                </div>
+                <div class="status-code">
+                    <div class="status-icon">❌</div>
+                    <div class="status-text">
+                        <div class="status-title">Access Denied - No Payment</div>
+                        <div class="status-desc">Student hasn't uploaded or verified payment for current period.</div>
+                    </div>
+                </div>
+                <div class="status-code">
+                    <div class="status-icon">✂️</div>
+                    <div class="status-text">
+                        <div class="status-title">Access Denied - Mess Cut</div>
+                        <div class="status-desc">Student has applied for mess cut for today or mess is closed.</div>
+                    </div>
+                </div>
+                <div class="status-code">
+                    <div class="status-icon">🚫</div>
+                    <div class="status-text">
+                        <div class="status-title">Access Denied - Status Issue</div>
+                        <div class="status-desc">Student registration not approved or QR code invalid.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📱 How to Scan</h2>
+            <ol>
+                <li><strong>Select Meal Type:</strong> Choose Breakfast, Lunch, or Dinner</li>
+                <li><strong>Start Scanner:</strong> Tap "Start Scanning" button</li>
+                <li><strong>Point Camera:</strong> Aim at student's QR code</li>
+                <li><strong>Wait for Result:</strong> Scanner will automatically process the code</li>
+                <li><strong>Check Status:</strong> Green = Allow, Red = Deny</li>
+                <li><strong>Continue:</strong> Scanner auto-restarts for next student</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>🔒 Security Features</h2>
+            <ul>
+                <li><strong>Token-based Access:</strong> Each scanner link has a unique, expiring token</li>
+                <li><strong>HMAC-signed QR Codes:</strong> QR codes are cryptographically signed</li>
+                <li><strong>Real-time Validation:</strong> All scans are validated against live database</li>
+                <li><strong>Audit Logging:</strong> All scan events are logged for security</li>
+                <li><strong>Automatic Expiry:</strong> Scanner tokens expire after set duration</li>
+            </ul>
+        </div>
+        
+        <div class="troubleshooting">
+            <h3>⚠️ Troubleshooting</h3>
+            <p><strong>Camera not working?</strong> Make sure you've granted camera permissions to your browser.</p>
+            <p><strong>QR code not scanning?</strong> Ensure good lighting and hold the QR code steady.</p>
+            <p><strong>Access denied errors?</strong> Check if the scanner token is still valid or contact admin.</p>
+            <p><strong>Network issues?</strong> The scanner works offline and will sync when connection is restored.</p>
+        </div>
+        
+        <div class="section">
+            <h2>📞 Support</h2>
+            <p>For technical issues or questions:</p>
+            <ul>
+                <li>Contact your mess administrator</li>
+                <li>Check if your scanner token is still valid</li>
+                <li>Ensure you have a stable internet connection</li>
+                <li>Try refreshing the page if scanner stops working</li>
+            </ul>
+        </div>
+        
+        <div class="back-link">
+            <a href="{% url 'scanner_page' %}" class="btn">← Back to Scanner</a>
+        </div>
+    </div>
+</body>
+</html>

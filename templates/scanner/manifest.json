@@ -1,0 +1,26 @@
+{
+  "name": "Mess QR Scanner",
+  "short_name": "MessScanner",
+  "description": "QR Code Scanner for Mess Management System",
+  "start_url": "/scanner/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "scope": "/scanner/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0zIDNIMTFWNUg5VjdIM1YzWk0zIDExSDVWOUgzVjExWk05IDExSDExVjlIOVYxMVpNMTMgM1YxMUgxNVY5SDE3VjdIMTVWNUgxN1YzSDEzWk0zIDEzSDExVjIxSDNWMTNaTTUgMTVWMTlIOVYxNUg1Wk0xMyAxM0gxNVYxNUgxM1YxM1pNMTcgMTNIMTlWMTVIMTdWMTNaTTE1IDE1SDE3VjE3SDE1VjE1Wk0xMyAxN0gxNVYxOUgxM1YxN1pNMTUgMTlIMTdWMjFIMTVWMTlaTTE3IDE3SDE5VjE5SDE3VjE3WiIvPgo8L3N2Zz4KPC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iNjQiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSIxMjgiIHk9IjEyOCIgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPgo8cGF0aCBkPSJNMyAzSDExVjVIOVY3SDNWM1pNMyAxMUg1VjlIM1YxMVpNOSAxMUgxMVY5SDlWMTFaTTEzIDNWMTFIMTVWOUgxN1Y3SDE1VjVIMTdWM0gxM1pNMyAxM0gxMVYyMUgzVjEzWk01IDE1VjE5SDlWMTVINVpNMTMgMTNIMTVWMTVIMTNWMTNaTTE3IDEzSDE5VjE1SDE3VjEzWk0xNSAxNUgxN1YxN0gxNVYxNVpNMTMgMTdIMTVWMTlIMTNWMTdaTTE1IDE5SDE3VjIxSDE1VjE5Wk0xNyAxN0gxOVYxOUgxN1YxN1oiLz4KPC9zdmc+CjwvZz4KPC9zdmc+",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}

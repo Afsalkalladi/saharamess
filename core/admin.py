@@ -531,7 +531,8 @@ def get_admin_urls():
     return urls
 
 # Register custom URLs
-admin.site.get_urls = lambda: get_admin_urls() + admin.site.get_urls()
+original_get_urls = admin.site.get_urls
+admin.site.get_urls = lambda: get_admin_urls() + original_get_urls()
 
 # Add dashboard customization
 def custom_admin_index(request, extra_context=None):
@@ -589,4 +590,10 @@ export_selected_as_csv.short_description = "Export selected items as CSV"
 
 # Add export action to all admin classes
 for admin_class in [StudentAdmin, PaymentAdmin, MessCutAdmin, ScanEventAdmin]:
-    admin_class.actions = list(admin_class.actions or []) + [export_selected_as_csv]
+    if hasattr(admin_class, 'actions') and admin_class.actions:
+        if callable(admin_class.actions):
+            admin_class.actions = [export_selected_as_csv]
+        else:
+            admin_class.actions = list(admin_class.actions) + [export_selected_as_csv]
+    else:
+        admin_class.actions = [export_selected_as_csv]

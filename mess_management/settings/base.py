@@ -78,8 +78,88 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
+        'core.authentication.StaffTokenAuthentication',
+        'core.authentication.AdminTokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+}
+
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+TELEGRAM_WEBHOOK_URL = config('TELEGRAM_WEBHOOK_URL', default='')
+ADMIN_TG_IDS = [int(x) for x in config('ADMIN_TG_IDS', default='').split(',') if x.strip()]
+
+# QR Code Configuration
+QR_SECRET = config('QR_SECRET', default='change-this-secret-key')
+
+# Cloudinary Configuration
+CLOUDINARY_URL = config('CLOUDINARY_URL', default='')
+
+# Google Sheets Configuration
+GOOGLE_SHEETS_CREDENTIALS = config('SHEETS_CREDENTIALS_JSON', default='{}')
+GOOGLE_SHEETS_SPREADSHEET_ID = config('SHEETS_SPREADSHEET_ID', default='')
+
+# Staff Scanner Configuration
+STAFF_SCANNER_PASSWORD = config('STAFF_SCANNER_PASSWORD', default='admin123')
+
+# Meal Windows Configuration
+DEFAULT_MEAL_WINDOWS = {
+    'BREAKFAST': {'start': '07:00', 'end': '09:30'},
+    'LUNCH': {'start': '12:00', 'end': '14:30'},
+    'DINNER': {'start': '19:00', 'end': '21:30'},
+}
+
+# Celery Configuration
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'core': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }

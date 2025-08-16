@@ -12,7 +12,11 @@ from core.views import (
     scan_qr, student_snapshot, regenerate_qr_codes, payment_reports,
     mess_cut_reports, telegram_webhook, register_student, upload_payment
 )
-from scanner.views import scanner_page, staff_login
+from scanner.views import (
+    scanner_page, staff_access_generator, revoke_token, list_tokens,
+    scanner_status, offline_page, service_worker, manifest_json,
+    scanner_help, access_denied
+)
 from admin_panel.views import admin_dashboard
 
 # API Router
@@ -41,7 +45,15 @@ urlpatterns = [
     
     # Scanner Interface
     path('scanner/', scanner_page, name='scanner_page'),
-    path('scanner/login', staff_login, name='staff_login'),
+    path('scanner/login/', staff_access_generator, name='staff_access_generator'),
+    path('scanner/revoke/', revoke_token, name='revoke_token'),
+    path('scanner/tokens/', list_tokens, name='list_tokens'),
+    path('scanner/status/', scanner_status, name='scanner_status'),
+    path('scanner/offline/', offline_page, name='offline_page'),
+    path('scanner/help/', scanner_help, name='scanner_help'),
+    path('scanner/access-denied/', access_denied, name='access_denied'),
+    path('sw.js', service_worker, name='service_worker'),
+    path('manifest.json', manifest_json, name='manifest_json'),
     
     # Admin Dashboard
     path('dashboard/', admin_dashboard, name='admin_dashboard'),

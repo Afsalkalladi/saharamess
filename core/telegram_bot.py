@@ -228,7 +228,7 @@ Use the buttons below to get started:
         
         # Validate format
         import re
-        if not re.match(r'^[A-Z0-9]+, roll_no):
+        if not re.match(r'^[A-Z0-9]+$', roll_no):
             await update.message.reply_text("Roll number must contain only letters and numbers. Please try again:")
             return REGISTER_ROLL
         
@@ -258,7 +258,7 @@ Use the buttons below to get started:
         
         # Validate phone format
         import re
-        if not re.match(r'^\+?[1-9]\d{1,14}, phone):
+        if not re.match(r'^\+?[1-9]\d{1,14}$', phone):
             await update.message.reply_text("Please enter a valid phone number:")
             return REGISTER_PHONE
         

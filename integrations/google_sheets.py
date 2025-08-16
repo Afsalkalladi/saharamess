@@ -323,5 +323,17 @@ class GoogleSheetsService:
             return {}
 
 
-# Global instance
-sheets_service = GoogleSheetsService()
+# Global instance - initialize only if not in test mode
+try:
+    from django.conf import settings
+    if hasattr(settings, 'SHEETS_CREDENTIALS_JSON') and isinstance(settings.SHEETS_CREDENTIALS_JSON, dict):
+        # Check if it's a real service account or test data
+        if settings.SHEETS_CREDENTIALS_JSON.get('client_email', '').endswith('@test.iam.gserviceaccount.com'):
+            sheets_service = None  # Skip initialization for test data
+        else:
+            sheets_service = GoogleSheetsService()
+    else:
+        sheets_service = None
+except Exception as e:
+    logger.error(f"Failed to initialize Google Sheets service: {e}")
+    sheets_service = None

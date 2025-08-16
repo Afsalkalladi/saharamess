@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mess QR Scanner</title>
+    <meta name="description" content="QR code scanner for mess management system">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Mess Scanner">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="{% url 'manifest_json' %}">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/scanner/img/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/static/scanner/img/icon-192x192.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .scanner-info {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .scanner-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            flex: 1;
+        }
+        
+        .meal-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .meal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-width: 100px;
+        }
+        
+        .meal-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .meal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        #qr-reader {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .scan-result {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .scan-result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .scan-result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .student-info {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .student-info h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-allowed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-blocked {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-top: auto;
+            padding-top: 20px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .meal-selector {
+                flex-direction: column;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Mess QR Scanner</h1>
+            <p>{{ scanner_info.label }}</p>
+            <small>Valid until: {{ scanner_info.valid_until }}</small>
+        </div>
+        
+        <div class="scanner-info">
+            <h3>📱 How to Use</h3>
+            <p>1. Select the meal type below</p>
+            <p>2. Point camera at student's QR code</p>
+            <p>3. Wait for scan result</p>
+        </div>
+        
+        <div class="scanner-section">
+            <div class="meal-selector">
+                <button class="meal-btn active" data-meal="BREAKFAST">🍳 Breakfast</button>
+                <button class="meal-btn" data-meal="LUNCH">🍽️ Lunch</button>
+                <button class="meal-btn" data-meal="DINNER">🍽️ Dinner</button>
+            </div>
+            
+            <div id="qr-reader"></div>
+            
+            <div id="scan-result" class="scan-result">
+                <div id="result-content"></div>
+                <div id="student-info" class="student-info" style="display: none;">
+                    <h3>Student Information</h3>
+                    <div id="student-details"></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="start-scan" class="btn btn-primary">📷 Start Scanning</button>
+                <button id="stop-scan" class="btn btn-secondary" style="display: none;">⏹️ Stop</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Mess Management System v1.0</p>
+            <p><a href="{% url 'scanner_help' %}" style="color: rgba(255,255,255,0.8);">Help & Instructions</a></p>
+        </div>
+    </div>
+
+    <!-- QR Scanner Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
+    
+    <script>
+        class MessScanner {
+            constructor() {
+                this.scanner = null;
+                this.selectedMeal = 'BREAKFAST';
+                this.token = '{{ token }}';
+                this.apiBaseUrl = '{{ api_base_url }}';
+                this.isScanning = false;
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.registerServiceWorker();
+            }
+            
+            setupEventListeners() {
+                // Meal selector
+                document.querySelectorAll('.meal-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.meal-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.selectedMeal = e.target.dataset.meal;
+                    });
+                });
+                
+                // Scanner controls
+                document.getElementById('start-scan').addEventListener('click', () => this.startScanning());
+                document.getElementById('stop-scan').addEventListener('click', () => this.stopScanning());
+            }
+            
+            async startScanning() {
+                try {
+                    const videoElement = document.createElement('video');
+                    document.getElementById('qr-reader').appendChild(videoElement);
+                    
+                    this.scanner = new QrScanner(videoElement, (result) => this.handleScanResult(result), {
+                        highlightScanRegion: true,
+                        highlightCodeOutline: true,
+                    });
+                    
+                    await this.scanner.start();
+                    this.isScanning = true;
+                    
+                    document.getElementById('start-scan').style.display = 'none';
+                    document.getElementById('stop-scan').style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Failed to start scanner:', error);
+                    this.showResult('error', 'Failed to start camera. Please check permissions.');
+                }
+            }
+            
+            stopScanning() {
+                if (this.scanner) {
+                    this.scanner.stop();
+                    this.scanner.destroy();
+                    this.scanner = null;
+                }
+                
+                const videoElement = document.querySelector('#qr-reader video');
+                if (videoElement) {
+                    videoElement.remove();
+                }
+                
+                this.isScanning = false;
+                document.getElementById('start-scan').style.display = 'block';
+                document.getElementById('stop-scan').style.display = 'none';
+            }
+            
+            async handleScanResult(result) {
+                if (!this.isScanning) return;
+                
+                this.stopScanning();
+                
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}scanner/scan`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.token}`,
+                        },
+                        body: JSON.stringify({
+                            qr_data: result.data,
+                            meal: this.selectedMeal,
+                            device_info: navigator.userAgent
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.result === 'ALLOWED') {
+                        this.showResult('success', '✅ Access Granted!', data.student_snapshot);
+                        this.playSuccessSound();
+                    } else {
+                        this.showResult('error', `❌ Access Denied: ${data.reason}`);
+                        this.playErrorSound();
+                    }
+                    
+                } catch (error) {
+                    console.error('Scan API error:', error);
+                    this.showResult('error', '❌ Network error. Please try again.');
+                }
+                
+                // Auto-restart scanning after 3 seconds
+                setTimeout(() => {
+                    if (!this.isScanning) {
+                        this.startScanning();
+                    }
+                }, 3000);
+            }
+            
+            showResult(type, message, studentData = null) {
+                const resultElement = document.getElementById('scan-result');
+                const contentElement = document.getElementById('result-content');
+                const studentInfoElement = document.getElementById('student-info');
+                
+                resultElement.className = `scan-result ${type}`;
+                contentElement.innerHTML = `<h3>${message}</h3>`;
+                
+                if (studentData) {
+                    const detailsHtml = `
+                        <div class="info-row">
+                            <span><strong>Name:</strong></span>
+                            <span>${studentData.name}</span>
+                        </div>
+                        <div class="info-row">
+                            <span><strong>Roll No:</strong></span>
+                            <span>${studentData.roll_no}</span>
+                        </div>
+                        <div class="info-row">
+                            <span><strong>Room:</strong></span>
+                            <span>${studentData.room_no}</span>
+                        </div>
+                        <div class="info-row">
+                            <span><strong>Status:</strong></span>
+                            <span class="status-badge status-${studentData.overall_status.toLowerCase()}">${studentData.overall_status}</span>
+                        </div>
+                        <div class="info-row">
+                            <span><strong>Payment:</strong></span>
+                            <span>${studentData.payment_ok ? '✅ Valid' : '❌ Invalid'}</span>
+                        </div>
+                    `;
+                    
+                    document.getElementById('student-details').innerHTML = detailsHtml;
+                    studentInfoElement.style.display = 'block';
+                } else {
+                    studentInfoElement.style.display = 'none';
+                }
+                
+                resultElement.style.display = 'block';
+                
+                // Hide result after 5 seconds
+                setTimeout(() => {
+                    resultElement.style.display = 'none';
+                }, 5000);
+            }
+            
+            playSuccessSound() {
+                // Create a simple success beep
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            }
+            
+            playErrorSound() {
+                // Create a simple error beep
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 300;
+                oscillator.type = 'sawtooth';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.8);
+            }
+            
+            registerServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => console.log('SW registered'))
+                        .catch(error => console.log('SW registration failed'));
+                }
+            }
+        }
+        
+        // Initialize scanner when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new MessScanner();
+        });
+    </script>
+</body>
+</html>
