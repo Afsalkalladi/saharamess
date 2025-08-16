@@ -19,12 +19,15 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Database - Use DATABASE_URL for production (Render compatible)
+# Database - Use DATABASE_URL for production (Supabase compatible)
 DATABASES = {
     'default': dj_database_url.config(
         default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
         conn_max_age=600,
         conn_health_checks=True,
+        options={
+            'sslmode': 'require',
+        }
     )
 }
 

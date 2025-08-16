@@ -38,6 +38,18 @@ git push origin main
    - Internal Database URL (for Docker)
    - External Database URL (for local testing)
 
+### **Step 2. Database Setup**
+
+**Using Supabase PostgreSQL**
+1. Get your Supabase database URL from your project settings
+2. Set `DATABASE_URL` environment variable to your Supabase connection string
+3. Format: `postgresql://postgres:[password]@[host]:5432/postgres?sslmode=require`
+
+**Alternative: Render PostgreSQL**
+1. In your Render dashboard, create a new PostgreSQL database
+2. Copy the External Database URL
+3. Set `DATABASE_URL` environment variable to this URL
+
 ### **Step 4: Create Redis Instance**
 
 **⚠️ Important**: Render doesn't offer Redis as a separate service in free tier.

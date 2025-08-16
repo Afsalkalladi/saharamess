@@ -41,4 +41,7 @@ urlpatterns = [
     # Telegram bot endpoints
     path('telegram/register', register_student, name='register_student'),
     path('telegram/upload-payment', upload_payment, name='upload_payment'),
+    
+    # Telegram webhook
+    path('', include('api.v1.telegram_urls')),
 ]
