@@ -40,6 +40,7 @@ RUN mkdir -p logs media staticfiles && \
 ARG DJANGO_SETTINGS_MODULE=mess_management.settings.development
 ENV DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
 RUN python manage.py collectstatic --noinput
+RUN python manage.py migrate --noinput
 
 # Switch to non-root user
 USER appuser

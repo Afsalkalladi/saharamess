@@ -39,9 +39,13 @@ urlpatterns = [
     path('api/v1/admin/reports/mess-cuts', mess_cut_reports, name='mess_cut_reports'),
     
     # Telegram Bot
-    path('telegram/webhook', telegram_webhook, name='telegram_webhook'),
+    path('webhook/', telegram_webhook, name='telegram_webhook'),
+    path('telegram/webhook/', telegram_webhook, name='telegram_webhook_alt'),
     path('api/v1/telegram/register', register_student, name='register_student'),
     path('api/v1/telegram/upload-payment', upload_payment, name='upload_payment'),
+    
+    # API v1 Telegram endpoints
+    path('api/v1/', include('api.v1.telegram_urls')),
     
     # Scanner Interface
     path('scanner/', scanner_page, name='scanner_page'),
