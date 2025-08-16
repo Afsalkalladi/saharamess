@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env.development
-load_dotenv(os.path.join(BASE_DIR.parent, '.env.development'))
+load_dotenv(os.path.join(BASE_DIR, '.env.development'))
 
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
