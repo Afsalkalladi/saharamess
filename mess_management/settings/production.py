@@ -25,11 +25,14 @@ DATABASES = {
         default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
         conn_max_age=600,
         conn_health_checks=True,
-        options={
-            'sslmode': 'require',
-        }
     )
 }
+
+# Add SSL requirement for Supabase
+if 'postgres' in DATABASES['default']['ENGINE']:
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+    }
 
 # Static files
 STATIC_URL = '/static/'
