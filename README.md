@@ -1,28 +1,113 @@
-# 🍽️ Mess Management System
+# 🍽️ Sahara Mess Management System
 
-A comprehensive digital mess management solution with Telegram bot integration and QR-based meal access control.
+A comprehensive Django-based mess management system with QR code scanning, Telegram bot integration, and admin panel for hostel/mess operations.
 
-## 🚀 Features
+## 🚀 What We Built
 
-### For Students
-- **Telegram Bot Interface**: Complete registration and management via Telegram
-- **QR Code Access**: Permanent QR codes for meal access
-- **Payment Management**: Upload payment screenshots for verification
-- **Mess Cut Applications**: Apply for mess cuts with automatic cutoff enforcement
-- **Real-time Notifications**: Get notified for all important events
+### **Core Functionalities**
 
-### For Staff
-- **Mobile QR Scanner**: Web-based QR scanner for meal verification
-- **Offline Support**: Continue scanning even with poor connectivity
-- **Student Information**: View student details, payment status, and access rights
-- **Multiple Meal Types**: Support for breakfast, lunch, and dinner
+#### 1. **Student Management System**
+- **Registration**: Students register via Telegram bot with personal details
+- **Approval Workflow**: Admin approval/denial of new registrations
+- **QR Code Generation**: Unique QR codes for each approved student
+- **Status Tracking**: Pending, Approved, Denied student statuses
 
-### For Admins
-- **Telegram Admin Panel**: Approve registrations, verify payments, manage closures
-- **Comprehensive Reports**: Payment status, mess cuts, and usage analytics
-- **Audit Trail**: Complete logging of all system activities
-- **Google Sheets Backup**: Automatic backup of critical data
-- **QR Code Management**: Regenerate all QR codes when needed
+#### 2. **QR Code Scanning System**
+- **Access Control**: QR code scanning for mess entry/exit
+- **Real-time Validation**: Instant verification of student access rights
+- **Scan Event Logging**: Complete audit trail of all scan activities
+- **Offline Support**: Works without internet connection
+
+#### 3. **Telegram Bot Integration**
+- **Student Interface**: Registration, QR code access, mess cuts, payment uploads
+- **Admin Interface**: Approve registrations, verify payments, view reports
+- **Notifications**: Real-time updates for approvals, payments, etc.
+- **Multi-language Support**: English and Hindi
+
+#### 4. **Payment Management**
+- **Upload System**: Students upload payment screenshots via Telegram
+- **Verification Workflow**: Admin verification/denial of payments
+- **Status Tracking**: None, Uploaded, Verified, Denied payment statuses
+- **Payment History**: Complete payment audit trail
+
+#### 5. **Mess Cut (Leave) Management**
+- **Leave Requests**: Students can apply for mess cuts via Telegram
+- **Date Range Selection**: Flexible from/to date selection
+- **Cutoff Rules**: Configurable cutoff times for mess cuts
+- **Automatic Processing**: System handles mess cut calculations
+
+#### 6. **Admin Panel**
+- **Django Admin**: Full CRUD operations for all models
+- **Custom Admin Views**: Specialized interfaces for common operations
+- **Bulk Operations**: Mass approve/deny, bulk QR generation
+- **Reporting**: Student statistics, payment reports, scan analytics
+
+#### 7. **Background Services**
+- **Celery Workers**: Asynchronous task processing
+- **Telegram Bot Service**: 24/7 bot operation
+- **Data Cleanup**: Automated old data cleanup
+- **Backup Services**: Scheduled data backups
+
+## 🛠️ How to Use
+
+### **For Students:**
+
+1. **Registration**:
+   - Message the Telegram bot: `/start`
+   - Follow registration prompts (name, roll number, room, phone)
+   - Wait for admin approval
+
+2. **Access QR Code**:
+   - After approval, use `/start` → "Show QR Code"
+   - Present QR code at mess scanner
+
+3. **Apply Mess Cut**:
+   - Use `/start` → "Apply Mess Cut"
+   - Select from/to dates
+   - Submit application
+
+4. **Upload Payment**:
+   - Use `/start` → "Upload Payment"
+   - Send payment screenshot
+   - Wait for admin verification
+
+### **For Admins:**
+
+1. **Telegram Admin Panel**:
+   - Use `/start` as admin
+   - Review pending registrations
+   - Verify payment uploads
+   - View system reports
+
+2. **Django Admin Panel**:
+   - Access `/admin/` on web interface
+   - Manage students, payments, mess cuts
+   - Generate bulk QR codes
+   - View detailed analytics
+
+3. **Scanner Interface**:
+   - Access `/scanner/` for QR code scanning
+   - Real-time scan validation
+   - Offline mode support
+
+### **Management Commands:**
+
+```bash
+# Setup initial data and superuser
+python manage.py setup_initial_data
+
+# Generate QR codes for all students
+python manage.py generate_qr_codes
+
+# Run Telegram bot
+python manage.py run_telegram_bot --polling
+
+# Backup system data
+python manage.py backup_data
+
+# Cleanup old data
+python manage.py cleanup_old_data --dry-run
+```
 
 ## 🏗️ Architecture
 
