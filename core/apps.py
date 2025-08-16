@@ -74,13 +74,6 @@ class CoreConfig(AppConfig):
         except Exception as e:
             logger.error(f"Cloudinary service initialization error: {str(e)}")
         
-        # Setup Telegram webhook in production
-        try:
-            from django.conf import settings
-            if not settings.DEBUG and hasattr(settings, 'TELEGRAM_BOT_TOKEN') and settings.TELEGRAM_BOT_TOKEN:
-                self._setup_telegram_webhook()
-        except Exception as e:
-            logger.error(f"Telegram webhook setup error: {str(e)}")
     
     def _setup_periodic_tasks(self):
         """Setup periodic tasks using Celery Beat."""
@@ -315,25 +308,6 @@ class CoreConfig(AppConfig):
         except Exception as e:
             logger.error(f"Cache configuration error: {str(e)}")
     
-    def _setup_telegram_webhook(self):
-        """Setup Telegram webhook for production deployment."""
-        import asyncio
-        from integrations.telegram_webhook import setup_webhook
-        
-        try:
-            # Run webhook setup asynchronously
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            result = loop.run_until_complete(setup_webhook())
-            loop.close()
-            
-            if result:
-                logger.info("Telegram webhook configured successfully")
-            else:
-                logger.warning("Telegram webhook setup failed")
-                
-        except Exception as e:
-            logger.error(f"Telegram webhook setup error: {str(e)}")
 
     def _warm_up_cache(self):
         """Warm up cache with frequently accessed data."""
