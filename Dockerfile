@@ -1,86 +1,37 @@
-# Multi-stage build for mess management system
-FROM python:3.12-slim as base
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_NO_CACHE_DIR=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app
 
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-# Copy requirements first for better caching
+# Copy requirements and install dependencies
 COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p logs media staticfiles && \
-    chown -R appuser:appuser /app
+# Create directories and collect static files
+RUN mkdir -p staticfiles media \
+    && python manage.py collectstatic --noinput \
+    && python manage.py migrate --noinput
 
-# Set Django settings and collect static files
-# Use build arg to determine settings module (defaults to development for local builds)
-ARG DJANGO_SETTINGS_MODULE=mess_management.settings.development
-ENV DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
-RUN python manage.py collectstatic --noinput
-RUN python manage.py migrate --noinput --run-syncdb
-
-# Switch to non-root user
+# Create non-root user
+RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health/ || exit 1
-
-# Default command
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "mess_management.wsgi:application"]
-
-# Development stage
-FROM base as development
-
-USER root
-
-# Install development dependencies
-RUN pip install \
-    ipython \
-    django-debug-toolbar \
-    pytest-django \
-    black \
-    flake8
-
-USER appuser
-
-# Development command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-# Production stage
-FROM base as production
-
-# Production-specific configurations
-ENV DJANGO_SETTINGS_MODULE=mess_management.settings.production
-
-# Copy production configuration
-COPY docker/gunicorn.conf.py /app/
-
-# Use gunicorn with custom config
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "mess_management.wsgi:application"]
+# Run gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "mess_management.wsgi:application"]

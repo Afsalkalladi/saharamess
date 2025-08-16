@@ -659,8 +659,8 @@ class SheetsService:
     def _enqueue_sheets_operation(cls, sheet_name: str, data: Dict[str, Any]):
         """Enqueue operation for background processing."""
         try:
-            from .tasks import process_sheets_log
-            process_sheets_log.delay(sheet_name, data)
+            from integrations.tasks import process_sheets_log
+            process_sheets_log(sheet_name, data)
         except Exception as e:
             # Fallback to DLQ
             logger.error(f"Failed to enqueue sheets operation: {str(e)}")
