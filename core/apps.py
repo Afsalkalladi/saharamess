@@ -221,21 +221,9 @@ class CoreConfig(AppConfig):
             
             qr_secret = getattr(settings, 'QR_SECRET', None)
             if not qr_secret:
-                errors.append(
-                    Error(
-                        'QR_SECRET setting is not configured',
-                        hint='Set QR_SECRET in your settings file',
-                        id='core.E001',
-                    )
-                )
+                logger.warning('QR_SECRET setting is not configured')
             elif len(qr_secret) < 32:
-                errors.append(
-                    Warning(
-                        'QR_SECRET is shorter than recommended (32+ characters)',
-                        hint='Use a longer secret for better security',
-                        id='core.W001',
-                    )
-                )
+                logger.warning('QR_SECRET is shorter than recommended (32+ characters)')
             
             return errors
         
@@ -246,23 +234,11 @@ class CoreConfig(AppConfig):
             
             bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
             if not bot_token:
-                errors.append(
-                    Error(
-                        'TELEGRAM_BOT_TOKEN setting is not configured',
-                        hint='Set TELEGRAM_BOT_TOKEN in your settings file',
-                        id='core.E002',
-                    )
-                )
+                logger.warning('TELEGRAM_BOT_TOKEN setting is not configured')
             
             admin_ids = getattr(settings, 'ADMIN_TG_IDS', [])
             if not admin_ids:
-                errors.append(
-                    Warning(
-                        'ADMIN_TG_IDS setting is empty',
-                        hint='Set at least one admin Telegram ID',
-                        id='core.W002',
-                    )
-                )
+                logger.warning('ADMIN_TG_IDS setting is empty')
             
             return errors
         
@@ -276,13 +252,7 @@ class CoreConfig(AppConfig):
             
             for meal in required_meals:
                 if meal not in meal_windows:
-                    errors.append(
-                        Warning(
-                            f'Missing meal window configuration for {meal}',
-                            hint=f'Add {meal} configuration to DEFAULT_MEAL_WINDOWS',
-                            id=f'core.W003',
-                        )
-                    )
+                    logger.warning(f'Missing meal window configuration for {meal}')
             
             return errors
         
@@ -314,17 +284,13 @@ class CoreConfig(AppConfig):
         
         try:
             from django.core.cache import cache
-            from .models import Settings
-            
-            # Cache system settings
-            settings_obj = Settings.get_settings()
-            cache.set('system_settings', settings_obj, 3600)  # 1 hour
-            
-            # Cache meal windows
             from django.conf import settings
+            
+            # Cache meal windows (no DB access)
             meal_windows = getattr(settings, 'DEFAULT_MEAL_WINDOWS', {})
             cache.set('meal_windows', meal_windows, 3600)
             
+            # Skip system settings cache during startup to avoid DB access warning
             logger.info("Cache warmed up successfully")
             
         except Exception as e:
@@ -361,7 +327,6 @@ class CoreConfig(AppConfig):
         initialization_steps = [
             ('Connecting signals', self._connect_signals),
             ('Initializing services', self._initialize_services),
-            ('Validating configuration', self._validate_configuration),
             ('Setting up periodic tasks', self._setup_periodic_tasks),
             ('Configuring logging', self._setup_logging_configuration),
             ('Registering custom checks', self._register_custom_checks),

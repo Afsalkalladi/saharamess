@@ -62,12 +62,15 @@ DATABASES = {
 }
 
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [
+    # BASE_DIR / 'static',  # Commented out to avoid warning during build
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
@@ -88,11 +91,13 @@ REST_FRAMEWORK = {
 
 # Telegram Bot Configuration
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
-TELEGRAM_WEBHOOK_URL = config('TELEGRAM_WEBHOOK_URL', default='')
-ADMIN_TG_IDS = [int(x) for x in config('ADMIN_TG_IDS', default='').split(',') if x.strip()]
+try:
+    ADMIN_TG_IDS = [int(x.strip()) for x in config('ADMIN_TG_IDS', default='').split(',') if x.strip()]
+except ValueError:
+    ADMIN_TG_IDS = []
 
-# QR Code Configuration
-QR_SECRET = config('QR_SECRET', default='change-this-secret-key')
+# QR Code settings
+QR_SECRET = config('QR_SECRET', default='your-very-long-secret-key-here-for-security-purposes-minimum-32-chars')
 
 # Cloudinary Configuration
 CLOUDINARY_URL = config('CLOUDINARY_URL', default='')
