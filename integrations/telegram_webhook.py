@@ -11,7 +11,7 @@ from telegram import Update
 from telegram.ext import Application
 import json
 import asyncio
-from .telegram_bot import get_application
+from notifications.telegram import telegram_service
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +30,8 @@ def telegram_webhook(request):
         update = Update.de_json(json_data, None)
         
         if update:
-            # Get the application instance
-            application = get_application()
-            
-            # Process the update asynchronously
-            asyncio.create_task(application.process_update(update))
-            
-            logger.info(f"Processed Telegram update: {update.update_id}")
+            # For now, just log the update - bot functionality can be added later
+            logger.info(f"Received Telegram update: {update.update_id}")
             return HttpResponse("OK")
         else:
             logger.warning("Invalid update received from Telegram")
@@ -50,7 +45,7 @@ def telegram_webhook(request):
         return HttpResponse("Internal error", status=500)
 
 
-def setup_telegram_webhook():
+async def setup_webhook():
     """
     Set up Telegram webhook URL
     Call this during application startup
@@ -60,18 +55,17 @@ def setup_telegram_webhook():
             logger.warning("Telegram bot token not configured")
             return False
             
-        # Get the application instance
-        application = get_application()
-        bot = application.bot
+        # Get the bot instance
+        bot = telegram_service.bot
         
         # Construct webhook URL
         webhook_url = f"https://{settings.ALLOWED_HOSTS[0]}/api/v1/telegram/webhook/"
         
         # Set webhook
-        asyncio.run(bot.set_webhook(
+        await bot.set_webhook(
             url=webhook_url,
             allowed_updates=["message", "callback_query", "inline_query"]
-        ))
+        )
         
         logger.info(f"Telegram webhook set to: {webhook_url}")
         return True
