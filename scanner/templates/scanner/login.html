@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Scanner Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .success-content {
+            text-align: center;
+        }
+
+        .scanner-url {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            word-break: break-all;
+            border: 1px solid #dee2e6;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .token-info {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 1px solid #ffeaa7;
+        }
+
+        .token-info h4 {
+            margin-bottom: 0.5rem;
+            color: #856404;
+        }
+
+        .token-info p {
+            margin: 0.25rem 0;
+            color: #856404;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 1px solid #ffeaa7;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🍽️ Mess Scanner</h1>
+            <p>Staff Access Portal</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">
+            ⚠️ {{ error }}
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">
+            ✅ Scanner token generated successfully!
+        </div>
+
+        <div class="success-content">
+            <h3>Scanner Access URL</h3>
+            <div class="scanner-url" id="scannerUrl">{{ scanner_url }}</div>
+            <button class="copy-btn" onclick="copyToClipboard()">📋 Copy URL</button>
+
+            <div class="token-info">
+                <h4>Token Information</h4>
+                <p><strong>Label:</strong> {{ token_info.label }}</p>
+                <p><strong>Expires:</strong> {{ token_info.expires_at|date:"Y-m-d H:i:s" }}</p>
+                <p><strong>Raw Token:</strong> <code>{{ token_info.raw_token }}</code></p>
+            </div>
+
+            <div class="warning">
+                ⚠️ <strong>Important:</strong><br>
+                • Save this URL securely - the token cannot be retrieved again<br>
+                • Share only with authorized staff members<br>
+                • Token will expire automatically as configured<br>
+                • Contact admin if you need to revoke access
+            </div>
+
+            <button class="btn" onclick="location.reload()" style="margin-top: 1rem;">
+                🔄 Generate Another Token
+            </button>
+        </div>
+
+        {% else %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="password">Admin Password</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="Enter admin password">
+            </div>
+
+            <div class="form-group">
+                <label for="label">Device/Location Label</label>
+                <input type="text" id="label" name="label" 
+                       placeholder="e.g., Main Counter, Breakfast Counter"
+                       value="Scanner Device">
+            </div>
+
+            <div class="form-group">
+                <label for="expires_hours">Token Validity (Hours)</label>
+                <select id="expires_hours" name="expires_hours">
+                    <option value="1">1 Hour</option>
+                    <option value="4">4 Hours</option>
+                    <option value="8">8 Hours</option>
+                    <option value="24" selected>24 Hours (1 Day)</option>
+                    <option value="72">72 Hours (3 Days)</option>
+                    <option value="168">168 Hours (1 Week)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn">
+                🔑 Generate Scanner Access
+            </button>
+        </form>
+
+        <div class="warning">
+            ℹ️ <strong>Instructions:</strong><br>
+            • Enter the admin password to generate a scanner access token<br>
+            • Choose appropriate validity period based on usage<br>
+            • The generated URL will provide direct access to the QR scanner<br>
+            • No additional login required on the scanner device
+        </div>
+
+        {% endif %}
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const urlText = document.getElementById('scannerUrl').textContent;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(urlText).then(() => {
+                    showCopySuccess();
+                }).catch(err => {
+                    fallbackCopy(urlText);
+                });
+            } else {
+                fallbackCopy(urlText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopySuccess();
+            } catch (err) {
+                alert('Failed to copy. Please copy manually.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            const btn = document.querySelector('.copy-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Copied!';
+            btn.style.background = '#28a745';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#28a745';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

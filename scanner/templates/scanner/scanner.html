@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mess QR Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            flex: 1;
+            padding: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .scanner-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .scanner-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border-radius: 15px;
+            object-fit: cover;
+            margin: 0 auto;
+            display: block;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .camera-controls {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin: 0 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 6px 20px rgba(86, 171, 47, 0.6);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.6);
+        }
+
+        .scan-result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 15px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .scan-result.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .scan-result.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .student-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .meal-selector {
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .meal-selector label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .meal-select {
+            padding: 12px 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            min-width: 200px;
+        }
+
+        .meal-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .offline-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        .offline-warning.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .scanner-section {
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .student-info {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                margin: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍽️ Mess QR Scanner</h1>
+    </div>
+
+    <div class="container">
+        <div class="offline-warning" id="offlineWarning">
+            ⚠️ Connection lost. Retrying automatically...
+        </div>
+
+        <div class="scanner-section">
+            <h2 class="scanner-title">📱 Scan Student QR Code</h2>
+            
+            <video id="video" autoplay muted playsinline></video>
+            
+            <div class="camera-controls">
+                <button id="startBtn" class="btn">📷 Start Camera</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>⏹️ Stop Camera</button>
+            </div>
+
+            <div class="meal-selector">
+                <label for="mealSelect">Select Meal:</label>
+                <select id="mealSelect" class="meal-select">
+                    <option value="BREAKFAST">🍳 Breakfast (7:00 AM - 9:30 AM)</option>
+                    <option value="LUNCH">🍽️ Lunch (12:00 PM - 2:30 PM)</option>
+                    <option value="DINNER">🍽️ Dinner (7:00 PM - 9:30 PM)</option>
+                </select>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing QR code...</p>
+            </div>
+
+            <div id="scanResult" class="scan-result">
+                <div id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
+    <script>
+        class MessScanner {
+            constructor() {
+                this.video = document.getElementById('video');
+                this.startBtn = document.getElementById('startBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.mealSelect = document.getElementById('mealSelect');
+                this.scanResult = document.getElementById('scanResult');
+                this.resultContent = document.getElementById('resultContent');
+                this.loading = document.getElementById('loading');
+                this.offlineWarning = document.getElementById('offlineWarning');
+                
+                this.scanner = null;
+                this.isScanning = false;
+                this.lastScanResult = null;
+                this.retryQueue = [];
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setCurrentMeal();
+                this.checkOnlineStatus();
+                
+                // Auto-start camera if permission granted
+                this.requestCameraPermission();
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startScanning());
+                this.stopBtn.addEventListener('click', () => this.stopScanning());
+                
+                // Online/offline detection
+                window.addEventListener('online', () => this.handleOnline());
+                window.addEventListener('offline', () => this.handleOffline());
+                
+                // Prevent accidental page refresh
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.isScanning) {
+                        e.preventDefault();
+                        e.returnValue = '';
+                    }
+                });
+            }
+
+            setCurrentMeal() {
+                const now = new Date();
+                const hour = now.getHours();
+                const minute = now.getMinutes();
+                const currentTime = hour * 60 + minute;
+
+                // Meal time ranges in minutes
+                const breakfast = { start: 7 * 60, end: 9 * 60 + 30 }; // 7:00-9:30
+                const lunch = { start: 12 * 60, end: 14 * 60 + 30 };    // 12:00-14:30
+                const dinner = { start: 19 * 60, end: 21 * 60 + 30 };   // 19:00-21:30
+
+                let selectedMeal = 'BREAKFAST'; // Default
+
+                if (currentTime >= breakfast.start && currentTime <= breakfast.end) {
+                    selectedMeal = 'BREAKFAST';
+                } else if (currentTime >= lunch.start && currentTime <= lunch.end) {
+                    selectedMeal = 'LUNCH';
+                } else if (currentTime >= dinner.start && currentTime <= dinner.end) {
+                    selectedMeal = 'DINNER';
+                } else if (currentTime > breakfast.end && currentTime < lunch.start) {
+                    selectedMeal = 'LUNCH';
+                } else if (currentTime > lunch.end && currentTime < dinner.start) {
+                    selectedMeal = 'DINNER';
+                }
+
+                this.mealSelect.value = selectedMeal;
+            }
+
+            async requestCameraPermission() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    this.startBtn.disabled = false;
+                } catch (error) {
+                    console.error('Camera permission denied:', error);
+                    this.showError('Camera permission is required to scan QR codes.');
+                }
+            }
+
+            async startScanning() {
+                try {
+                    this.startBtn.disabled = true;
+                    this.stopBtn.disabled = false;
+                    
+                    // Initialize QR Scanner
+                    this.scanner = new QrScanner(this.video, 
+                        (result) => this.handleScanResult(result),
+                        {
+                            returnDetailedScanResult: true,
+                            highlightScanRegion: true,
+                            highlightCodeOutline: true,
+                        }
+                    );
+
+                    await this.scanner.start();
+                    this.isScanning = true;
+                    
+                    console.log('Scanner started successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to start scanner:', error);
+                    this.showError('Failed to start camera. Please refresh and try again.');
+                    this.startBtn.disabled = false;
+                    this.stopBtn.disabled = true;
+                }
+            }
+
+            stopScanning() {
+                if (this.scanner) {
+                    this.scanner.stop();
+                    this.scanner.destroy();
+                    this.scanner = null;
+                }
+                
+                this.isScanning = false;
+                this.startBtn.disabled = false;
+                this.stopBtn.disabled = true;
+                
+                console.log('Scanner stopped');
+            }
+
+            async handleScanResult(result) {
+                if (!this.isScanning) return;
+                
+                const qrData = result.data;
+                console.log('QR Code scanned:', qrData);
+                
+                // Prevent duplicate scans
+                if (this.lastScanResult === qrData) {
+                    return;
+                }
+                this.lastScanResult = qrData;
+                
+                // Clear previous result after 5 seconds
+                setTimeout(() => {
+                    this.lastScanResult = null;
+                }, 5000);
+                
+                await this.processScan(qrData);
+            }
+
+            async processScan(qrData) {
+                this.showLoading(true);
+                
+                const scanData = {
+                    qr_data: qrData,
+                    meal: this.mealSelect.value,
+                    device_info: this.getDeviceInfo()
+                };
+
+                try {
+                    const response = await this.apiCall('/api/v1/scanner/scan', 'POST', scanData);
+                    
+                    if (response.result === 'ALLOWED') {
+                        this.showSuccess(response);
+                    } else {
+                        this.showBlocked(response);
+                    }
+                    
+                } catch (error) {
+                    console.error('Scan processing error:', error);
+                    
+                    if (!navigator.onLine) {
+                        this.queueForRetry(scanData);
+                        this.showError('No internet connection. Scan queued for retry.');
+                    } else {
+                        this.showError('Failed to process scan. Please try again.');
+                    }
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async apiCall(endpoint, method = 'GET', data = null) {
+                const token = this.getStaffToken();
+                
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(endpoint, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                return await response.json();
+            }
+
+            getStaffToken() {
+                // Extract token from URL parameters or use stored token
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token') || localStorage.getItem('staff_token');
+                
+                if (!token) {
+                    throw new Error('Staff token not found. Please use the provided scanner link.');
+                }
+                
+                localStorage.setItem('staff_token', token);
+                return token;
+            }
+
+            getDeviceInfo() {
+                return {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    timestamp: new Date().toISOString(),
+                    screen: `${screen.width}x${screen.height}`,
+                    language: navigator.language
+                };
+            }
+
+            showSuccess(response) {
+                const student = response.student_snapshot;
+                
+                const html = `
+                    <div class="success-header">
+                        <h3>✅ Access Granted</h3>
+                        <p>Meal served successfully</p>
+                    </div>
+                    
+                    <div class="student-info">
+                        <div class="info-card">
+                            <div class="info-label">Student Name</div>
+                            <div class="info-value">${student.name}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Roll Number</div>
+                            <div class="info-value">${student.roll_no}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Room Number</div>
+                            <div class="info-value">${student.room_no}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Meal</div>
+                            <div class="info-value">${this.mealSelect.value}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-info" style="margin-top: 1rem; text-align: center;">
+                        <span class="status-indicator ${student.payment_ok ? 'status-ok' : 'status-error'}">
+                            Payment: ${student.payment_ok ? 'OK' : 'Not OK'}
+                        </span>
+                        <span class="status-indicator ${student.today_cut ? 'status-warning' : 'status-ok'}">
+                            Cut: ${student.today_cut ? 'Yes' : 'No'}
+                        </span>
+                    </div>
+                `;
+                
+                this.showResult(html, 'success');
+            }
+
+            showBlocked(response) {
+                const html = `
+                    <div class="error-header">
+                        <h3>❌ Access Blocked</h3>
+                        <p>${response.reason || 'Access denied'}</p>
+                    </div>
+                    
+                    ${response.student_snapshot ? `
+                    <div class="student-info">
+                        <div class="info-card">
+                            <div class="info-label">Student Name</div>
+                            <div class="info-value">${response.student_snapshot.name}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Roll Number</div>
+                            <div class="info-value">${response.student_snapshot.roll_no}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">${response.student_snapshot.overall_status}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+                
+                this.showResult(html, 'error');
+            }
+
+            showError(message) {
+                const html = `
+                    <div class="error-header">
+                        <h3>⚠️ Error</h3>
+                        <p>${message}</p>
+                    </div>
+                `;
+                
+                this.showResult(html, 'error');
+            }
+
+            showResult(html, type) {
+                this.resultContent.innerHTML = html;
+                this.scanResult.className = `scan-result ${type}`;
+                this.scanResult.style.display = 'block';
+                
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    this.scanResult.style.display = 'none';
+                }, 10000);
+            }
+
+            showLoading(show) {
+                this.loading.classList.toggle('show', show);
+            }
+
+            checkOnlineStatus() {
+                if (!navigator.onLine) {
+                    this.handleOffline();
+                }
+            }
+
+            handleOnline() {
+                this.offlineWarning.classList.remove('show');
+                this.processRetryQueue();
+            }
+
+            handleOffline() {
+                this.offlineWarning.classList.add('show');
+            }
+
+            queueForRetry(scanData) {
+                this.retryQueue.push({
+                    data: scanData,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Keep only last 10 items
+                if (this.retryQueue.length > 10) {
+                    this.retryQueue = this.retryQueue.slice(-10);
+                }
+            }
+
+            async processRetryQueue() {
+                if (this.retryQueue.length === 0) return;
+                
+                console.log(`Processing ${this.retryQueue.length} queued scans...`);
+                
+                const queue = [...this.retryQueue];
+                this.retryQueue = [];
+                
+                for (const item of queue) {
+                    try {
+                        await this.apiCall('/api/v1/scanner/scan', 'POST', item.data);
+                        console.log('Queued scan processed successfully');
+                    } catch (error) {
+                        console.error('Failed to process queued scan:', error);
+                        // Re-queue if still failing
+                        this.retryQueue.push(item);
+                    }
+                }
+            }
+        }
+
+        // Initialize scanner when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new MessScanner();
+        });
+
+        // Service worker for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(console.error);
+        }
+    </script>
+</body>
+</html>
