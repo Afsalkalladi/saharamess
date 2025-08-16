@@ -1,5 +1,9 @@
 from .base import *
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env.development
+load_dotenv(os.path.join(BASE_DIR.parent, '.env.development'))
 
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
@@ -16,9 +20,9 @@ DATABASES = {
     }
 }
 
-# Override settings for testing without external services
+# Override settings for development with real values from .env.development
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', 'test-token')
-ADMIN_TG_IDS = [123456789, 987654321]  # Test admin IDs
+ADMIN_TG_IDS = [int(x.strip()) for x in os.getenv('ADMIN_TG_IDS', '123456789').split(',') if x.strip()]
 QR_SECRET = os.getenv('QR_SECRET', 'test-qr-secret')
 STAFF_SCANNER_PASSWORD = os.getenv('STAFF_SCANNER_PASSWORD', 'test-password')
 

@@ -668,6 +668,72 @@ Use the buttons below to get started:
         except Student.DoesNotExist:
             await update.callback_query.answer("Student not found or already processed!")
     
+    async def admin_payments(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Show pending payments for review."""
+        pending_payments = Payment.objects.filter(status=Payment.Status.UPLOADED).order_by('created_at')
+        
+        if not pending_payments.exists():
+            text = "✅ No pending payments to review!"
+            keyboard = [[InlineKeyboardButton("🏠 Main Menu", callback_data="start")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await update.callback_query.edit_message_text(text, reply_markup=reply_markup)
+            return
+        
+        text = "💳 **Pending Payments**\n\n"
+        keyboard = []
+        
+        for payment in pending_payments[:10]:  # Show max 10 payments
+            student_name = payment.student.name if payment.student else "Unknown"
+            text += f"• {student_name} - ₹{payment.amount}\n"
+            text += f"  Uploaded: {payment.created_at.strftime('%d/%m %H:%M')}\n\n"
+            
+            keyboard.append([
+                InlineKeyboardButton(f"✅ Verify {student_name}", callback_data=f"verify_payment_{payment.id}"),
+                InlineKeyboardButton(f"❌ Deny {student_name}", callback_data=f"deny_payment_{payment.id}")
+            ])
+        
+        keyboard.append([InlineKeyboardButton("🏠 Main Menu", callback_data="start")])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.callback_query.edit_message_text(text, reply_markup=reply_markup)
+    
+    async def admin_verify_payment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Verify a payment."""
+        payment_id = update.callback_query.data.split('_')[2]
+        
+        try:
+            payment = Payment.objects.get(id=payment_id, status=Payment.Status.UPLOADED)
+            payment.status = Payment.Status.VERIFIED
+            payment.save()
+            
+            # Notify student
+            await self.notify_payment_verified(payment)
+            
+            await update.callback_query.answer(f"✅ Payment verified!")
+            await self.admin_payments(update, context)
+            
+        except Payment.DoesNotExist:
+            await update.callback_query.answer("Payment not found or already processed!")
+    
+    async def admin_deny_payment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Deny a payment."""
+        payment_id = update.callback_query.data.split('_')[2]
+        
+        try:
+            payment = Payment.objects.get(id=payment_id, status=Payment.Status.UPLOADED)
+            payment.status = Payment.Status.DENIED
+            payment.save()
+            
+            # Notify student
+            await self.notify_payment_denied(payment)
+            
+            await update.callback_query.answer(f"❌ Payment denied!")
+            await self.admin_payments(update, context)
+            
+        except Payment.DoesNotExist:
+            await update.callback_query.answer("Payment not found or already processed!")
+    
     # Notification methods
     async def notify_admins_new_registration(self, student):
         """Notify admins of new registration."""
@@ -698,13 +764,12 @@ Use the buttons below to get started:
             await self.application.bot.send_message(student.tg_user_id, message)
         except Exception as e:
             logger.error(f"Failed to notify student {student.tg_user_id}: {str(e)}")
-    
     async def notify_student_denied(self, student):
         """Notify student of denial."""
         message = (
             f"❌ **Registration Denied**\n\n"
-            f"Sorry {student.name}, your registration could not be approved at this time.\n\n"
-            f"Please contact the mess admin if you believe this is an error."
+            f"Sorry {student.name}, your mess registration was not approved.\n\n"
+            f"Please contact the mess administration for more information."
         )
         
         try:
@@ -712,15 +777,42 @@ Use the buttons below to get started:
         except Exception as e:
             logger.error(f"Failed to notify student {student.tg_user_id}: {str(e)}")
     
+    async def notify_payment_verified(self, payment):
+        """Notify student of payment verification."""
+        message = (
+            f"✅ **Payment Verified!**\n\n"
+            f"Your payment of ₹{payment.amount} has been verified and approved.\n\n"
+            f"Your mess access is now active!"
+        )
+        
+        try:
+            await self.application.bot.send_message(payment.student.tg_user_id, message)
+        except Exception as e:
+            logger.error(f"Failed to notify student {payment.student.tg_user_id}: {str(e)}")
+    
+    async def notify_payment_denied(self, payment):
+        """Notify student of payment denial."""
+        message = (
+            f"❌ **Payment Denied**\n\n"
+            f"Your payment of ₹{payment.amount} was not approved.\n\n"
+            f"Please check your payment details and try again, or contact the mess administration."
+        )
+        
+        try:
+            await self.application.bot.send_message(payment.student.tg_user_id, message)
+        except Exception as e:
+            logger.error(f"Failed to notify student {payment.student.tg_user_id}: {str(e)}")
+    
+    # Utility methods
     async def cancel(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Cancel current conversation."""
-        context.user_data.clear()
-        await update.message.reply_text("❌ Operation cancelled. Use /start to return to the main menu.")
+        await update.message.reply_text("❌ Operation cancelled.")
         return ConversationHandler.END
     
-    async def error_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle errors."""
-        logger.error(f"Update {update} caused error {context.error}")
+    # Error handler
+    async def error_handler(self, update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Log the error and send a telegram message to notify the developer."""
+        logger.error(msg="Exception while handling an update:", exc_info=context.error)
         
         if update and update.effective_message:
             await update.effective_message.reply_text(
