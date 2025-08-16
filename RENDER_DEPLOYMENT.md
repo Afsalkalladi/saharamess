@@ -71,9 +71,11 @@ git push origin main
    
    ```
    Language: Docker (NOT Python)
-   Build Command: docker build -t mess-app .
-   Start Command: docker run -p 10000:8000 mess-app
+   Build Command: (Leave empty - Render auto-detects Dockerfile)
+   Start Command: (Leave empty - Uses Dockerfile CMD)
    ```
+   
+   **Note:** Render automatically detects and builds Docker containers. No custom build/start commands needed.
    
    **Why Docker instead of Python?**
    - Your app needs multiple services (Django + Celery + Telegram bot)

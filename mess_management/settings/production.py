@@ -1,31 +1,31 @@
 from .base import *
 import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
+import dj_database_url
+from decouple import config
 
 DEBUG = False
-ALLOWED_HOSTS = ['*']  # Configure with your domain
+
+# Use environment variable for allowed hosts
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 # Security settings
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
-# Database - Use PostgreSQL in production
+# Database - Use DATABASE_URL for production (Render compatible)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'mess_management'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 # Static files
@@ -38,22 +38,22 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Production environment variables
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-ADMIN_TG_IDS = [int(x.strip()) for x in os.getenv('ADMIN_TG_IDS', '').split(',') if x.strip()]
-QR_SECRET = os.getenv('QR_SECRET')
-STAFF_SCANNER_PASSWORD = os.getenv('STAFF_SCANNER_PASSWORD')
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+ADMIN_TG_IDS = [int(x.strip()) for x in config('ADMIN_TG_IDS', default='').split(',') if x.strip()]
+QR_SECRET = config('QR_SECRET', default='change-this-secret-key')
+STAFF_SCANNER_PASSWORD = config('STAFF_SCANNER_PASSWORD', default='admin123')
 
 # Cloudinary settings
-CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
-CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
-CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY', default='')
+CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET', default='')
 
 # Google Sheets settings
-SHEETS_CREDENTIALS_JSON = os.getenv('SHEETS_CREDENTIALS_JSON')
-SHEETS_SPREADSHEET_ID = os.getenv('SHEETS_SPREADSHEET_ID')
+SHEETS_CREDENTIALS_JSON = config('SHEETS_CREDENTIALS_JSON', default='{}')
+SHEETS_SPREADSHEET_ID = config('SHEETS_SPREADSHEET_ID', default='')
 
 # Redis/Celery settings
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 
@@ -74,8 +74,8 @@ LOGGING = {
 
 # Email settings (if needed)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')

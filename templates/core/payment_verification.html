@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Verification{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .upload-area {
+        border: 2px dashed #e2e8f0;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #f8fafc;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-area:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .upload-area.dragover {
+        border-color: #10b981;
+        background: #ecfdf5;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-verified {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .receipt-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .payment-method-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        margin: 16px 0;
+    }
+    
+    .payment-method-btn {
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+    
+    .payment-method-btn:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .payment-method-btn.selected {
+        border-color: #10b981;
+        background: #ecfdf5;
+        color: #065f46;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Payment Verification</h1>
+            <p class="text-gray-600">Upload your payment receipt for manual verification</p>
+        </div>
+
+        <!-- Payment Submission Form -->
+        <div class="payment-card">
+            <h2 class="text-xl font-semibold mb-6">Submit Payment Receipt</h2>
+            
+            <form id="paymentForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Amount Input -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Payment Amount (₹)
+                    </label>
+                    <input type="number" 
+                           id="amount" 
+                           name="amount" 
+                           min="100" 
+                           step="0.01" 
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Enter amount paid">
+                </div>
+
+                <!-- Payment Method Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Payment Method
+                    </label>
+                    <div class="payment-method-grid">
+                        <div class="payment-method-btn" data-method="UPI">
+                            <div class="text-2xl mb-1">📱</div>
+                            <div class="text-sm">UPI</div>
+                        </div>
+                        <div class="payment-method-btn" data-method="Bank Transfer">
+                            <div class="text-2xl mb-1">🏦</div>
+                            <div class="text-sm">Bank Transfer</div>
+                        </div>
+                        <div class="payment-method-btn" data-method="Cash">
+                            <div class="text-2xl mb-1">💵</div>
+                            <div class="text-sm">Cash</div>
+                        </div>
+                        <div class="payment-method-btn" data-method="Card">
+                            <div class="text-2xl mb-1">💳</div>
+                            <div class="text-sm">Card</div>
+                        </div>
+                        <div class="payment-method-btn" data-method="Other">
+                            <div class="text-2xl mb-1">💰</div>
+                            <div class="text-sm">Other</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="paymentMethod" name="payment_method" required>
+                </div>
+
+                <!-- Receipt Upload -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Payment Receipt
+                    </label>
+                    <div class="upload-area" id="uploadArea">
+                        <div id="uploadContent">
+                            <div class="text-4xl mb-4">📄</div>
+                            <p class="text-lg font-medium text-gray-700 mb-2">
+                                Drop your receipt here or click to browse
+                            </p>
+                            <p class="text-sm text-gray-500 mb-4">
+                                Supports: JPG, PNG, PDF (Max 5MB)
+                            </p>
+                            <button type="button" 
+                                    class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                Choose File
+                            </button>
+                        </div>
+                        <div id="previewContent" class="hidden">
+                            <img id="receiptPreview" class="receipt-preview mx-auto mb-4" alt="Receipt Preview">
+                            <p id="fileName" class="text-sm font-medium text-gray-700 mb-2"></p>
+                            <button type="button" 
+                                    id="changeFile" 
+                                    class="text-blue-500 hover:text-blue-600 text-sm">
+                                Change File
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" 
+                           id="receiptFile" 
+                           name="receipt" 
+                           accept=".jpg,.jpeg,.png,.pdf" 
+                           required 
+                           class="hidden">
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Additional Notes (Optional)
+                    </label>
+                    <textarea id="notes" 
+                              name="notes" 
+                              rows="3" 
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Any additional information about the payment..."></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <button type="submit" 
+                            id="submitBtn"
+                            class="bg-green-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        <span id="submitText">Submit for Verification</span>
+                        <span id="submitLoader" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Submitting...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Payment History -->
+        <div class="payment-card">
+            <h2 class="text-xl font-semibold mb-6">Payment History</h2>
+            
+            <div id="paymentHistory">
+                <div class="text-center py-8 text-gray-500">
+                    <div class="text-4xl mb-4">📋</div>
+                    <p>Loading payment history...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-8 max-w-md mx-4">
+        <div class="text-center">
+            <div class="text-6xl mb-4">✅</div>
+            <h3 class="text-xl font-semibold mb-2">Payment Submitted!</h3>
+            <p class="text-gray-600 mb-6">Your payment has been submitted for verification. You'll be notified once it's reviewed.</p>
+            <button id="closeModal" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const receiptFile = document.getElementById('receiptFile');
+    const uploadContent = document.getElementById('uploadContent');
+    const previewContent = document.getElementById('previewContent');
+    const receiptPreview = document.getElementById('receiptPreview');
+    const fileName = document.getElementById('fileName');
+    const changeFile = document.getElementById('changeFile');
+    const paymentForm = document.getElementById('paymentForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const submitLoader = document.getElementById('submitLoader');
+    const successModal = document.getElementById('successModal');
+    const closeModal = document.getElementById('closeModal');
+
+    // Payment method selection
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.payment-method-btn').forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('paymentMethod').value = this.dataset.method;
+        });
+    });
+
+    // File upload handling
+    uploadArea.addEventListener('click', () => receiptFile.click());
+    changeFile.addEventListener('click', () => receiptFile.click());
+
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            receiptFile.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+
+    receiptFile.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size too large. Maximum 5MB allowed.');
+            return;
+        }
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Invalid file type. Only JPG, PNG, and PDF files are allowed.');
+            return;
+        }
+
+        fileName.textContent = file.name;
+
+        // Show preview for images
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                receiptPreview.src = e.target.result;
+                receiptPreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            receiptPreview.classList.add('hidden');
+        }
+
+        uploadContent.classList.add('hidden');
+        previewContent.classList.remove('hidden');
+    }
+
+    // Form submission
+    paymentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Validate form
+        const amount = document.getElementById('amount').value;
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const receipt = receiptFile.files[0];
+
+        if (!amount || !paymentMethod || !receipt) {
+            alert('Please fill all required fields');
+            return;
+        }
+
+        // Show loading state
+        submitBtn.disabled = true;
+        submitText.classList.add('hidden');
+        submitLoader.classList.remove('hidden');
+
+        try {
+            const formData = new FormData();
+            formData.append('amount', amount);
+            formData.append('payment_method', paymentMethod);
+            formData.append('receipt', receipt);
+            formData.append('notes', document.getElementById('notes').value);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            const response = await fetch('/api/v1/payments/submit-verification/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Show success modal
+                successModal.classList.remove('hidden');
+                successModal.classList.add('flex');
+                
+                // Reset form
+                paymentForm.reset();
+                uploadContent.classList.remove('hidden');
+                previewContent.classList.add('hidden');
+                document.querySelectorAll('.payment-method-btn').forEach(b => b.classList.remove('selected'));
+                
+                // Reload payment history
+                loadPaymentHistory();
+            } else {
+                alert(result.error || 'Failed to submit payment');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('Failed to submit payment. Please try again.');
+        } finally {
+            // Reset loading state
+            submitBtn.disabled = false;
+            submitText.classList.remove('hidden');
+            submitLoader.classList.add('hidden');
+        }
+    });
+
+    // Close modal
+    closeModal.addEventListener('click', function() {
+        successModal.classList.add('hidden');
+        successModal.classList.remove('flex');
+    });
+
+    // Load payment history
+    async function loadPaymentHistory() {
+        try {
+            const response = await fetch('/api/v1/payments/history/');
+            const data = await response.json();
+            
+            const historyContainer = document.getElementById('paymentHistory');
+            
+            if (data.payments && data.payments.length > 0) {
+                historyContainer.innerHTML = data.payments.map(payment => `
+                    <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="font-medium">₹${payment.amount}</span>
+                                <span class="text-gray-500 ml-2">${payment.payment_method}</span>
+                            </div>
+                            <span class="status-badge status-${payment.status}">
+                                ${payment.status.replace('_', ' ')}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <p>Submitted: ${new Date(payment.submitted_at).toLocaleDateString()}</p>
+                            ${payment.verified_at ? `<p>Verified: ${new Date(payment.verified_at).toLocaleDateString()}</p>` : ''}
+                            ${payment.admin_comments ? `<p class="mt-2"><strong>Comments:</strong> ${payment.admin_comments}</p>` : ''}
+                        </div>
+                        ${payment.receipt_url ? `
+                            <div class="mt-2">
+                                <a href="${payment.receipt_url}" target="_blank" class="text-blue-500 hover:text-blue-600 text-sm">
+                                    📄 View Receipt
+                                </a>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            } else {
+                historyContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <div class="text-4xl mb-4">📋</div>
+                        <p>No payment history found</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Failed to load payment history:', error);
+            document.getElementById('paymentHistory').innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <div class="text-4xl mb-4">❌</div>
+                    <p>Failed to load payment history</p>
+                </div>
+            `;
+        }
+    }
+
+    // Load payment history on page load
+    loadPaymentHistory();
+});
+</script>
+{% endblock %}

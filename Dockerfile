@@ -35,7 +35,10 @@ COPY . .
 RUN mkdir -p logs media staticfiles && \
     chown -R appuser:appuser /app
 
-# Collect static files
+# Set Django settings and collect static files
+# Use build arg to determine settings module (defaults to development for local builds)
+ARG DJANGO_SETTINGS_MODULE=mess_management.settings.development
+ENV DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
 RUN python manage.py collectstatic --noinput
 
 # Switch to non-root user
