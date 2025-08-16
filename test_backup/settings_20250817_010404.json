@@ -1,0 +1,13 @@
+[
+{
+  "model": "core.settings",
+  "pk": 1,
+  "fields": {
+    "tz": "Asia/Kolkata",
+    "cutoff_time": "23:00:00",
+    "qr_secret_version": 1,
+    "qr_secret_hash": "",
+    "meals": {}
+  }
+}
+]
